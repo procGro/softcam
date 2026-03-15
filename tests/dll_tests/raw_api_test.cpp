@@ -93,4 +93,16 @@ TEST(scDeleteCamera, IgnoresInvalidPointer) {
     scDeleteCamera(&x);
 }
 
+
+TEST(scIsConnected, ReturnsFalseIfNotConnected) {
+    void* cam = scCreateCamera(320, 240, 60);
+    EXPECT_NE(cam, nullptr);
+    EXPECT_FALSE(scIsConnected(cam));
+    scDeleteCamera(cam);
+}
+
+TEST(scIsConnected, InvalidArgs) {
+    EXPECT_FALSE(scIsConnected(nullptr));
+}
+
 } //namespace RawAPITest
