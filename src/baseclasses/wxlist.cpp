@@ -853,39 +853,5 @@ void CBaseList::Reverse()
     m_pLast = p;
 
 
-#if 0     // old version
-
-    if (m_pFirst==NULL) return;          // empty list
-    if (m_pFirst->Next()==NULL) return;  // single node list
-
-
-    /* run along forward chain */
-    for ( p = m_pFirst
-        ; p!=NULL
-        ; p = p->Next()
-        ){
-        p->SetPrev(p->Next());
-    }
-
-
-    /* special case first element */
-    m_pFirst->SetNext(NULL);     // fix the old first element
-
-
-    /* run along new reverse chain i.e. old forward chain again */
-    for ( p = m_pFirst           // start at the old first element
-        ; p->Prev()!=NULL        // while there's a node still to be set
-        ; p = p->Prev()          // work in the same direction as before
-        ){
-        p->Prev()->SetNext(p);
-    }
-
-
-    /* fix forward and reverse pointers
-       - the triple XOR swap would work but all the casts look hideous */
-    p = m_pFirst;
-    m_pFirst = m_pLast;
-    m_pLast = p;
-#endif
 
 } // Reverse
