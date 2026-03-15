@@ -1,12 +1,36 @@
 #include "Misc.h"
 
 #include <windows.h>
+#include <sddl.h>
 #include <cmath>
 #include <cassert>
 
 
 namespace softcam {
 
+namespace {
+
+struct RestrictedSecurityAttributes {
+    RestrictedSecurityAttributes() {
+        sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa.bInheritHandle = FALSE;
+        // Restrict access to the current user (CU) to prevent object hijacking
+        ConvertStringSecurityDescriptorToSecurityDescriptorA(
+            "D:(A;;GA;;;CU)",
+            SDDL_REVISION_1,
+            &sa.lpSecurityDescriptor,
+            NULL);
+    }
+    ~RestrictedSecurityAttributes() {
+        if (sa.lpSecurityDescriptor) {
+            LocalFree(sa.lpSecurityDescriptor);
+        }
+    }
+    SECURITY_ATTRIBUTES sa{};
+    operator SECURITY_ATTRIBUTES*() { return sa.lpSecurityDescriptor ? &sa : nullptr; }
+};
+
+} // namespace
 
 Timer::Timer()
 {
@@ -70,7 +94,7 @@ void Timer::sleep(float seconds)
 
 
 NamedMutex::NamedMutex(const char* name) :
-    m_handle(CreateMutexA(nullptr, false, name), closeHandle)
+    m_handle(CreateMutexA(RestrictedSecurityAttributes(), false, name), closeHandle)
 {
     assert( m_handle.get() != nullptr && "Creating a named mutex failed" );
 }
@@ -120,7 +144,7 @@ SharedMemory::open(const char* name)
 SharedMemory::SharedMemory(const char* name, unsigned long size)
 {
     m_handle.reset(
-        CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, size, name),
+        CreateFileMappingA(INVALID_HANDLE_VALUE, RestrictedSecurityAttributes(), PAGE_READWRITE, 0, size, name),
         closeHandle);
     if (m_handle && GetLastError() != ERROR_ALREADY_EXISTS)
     {

@@ -29,7 +29,7 @@ class Timer
 class NamedMutex
 {
  public:
-    explicit NamedMutex(const char* name);
+    NamedMutex(const char* name);
 
     void        lock();
     void        unlock();
