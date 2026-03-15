@@ -32,6 +32,39 @@ struct RestrictedSecurityAttributes {
 
 } // namespace
 
+namespace {
+
+class ScopedSecurityAttributes {
+public:
+    ScopedSecurityAttributes() {
+        m_sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        m_sa.lpSecurityDescriptor = nullptr;
+        m_sa.bInheritHandle = FALSE;
+
+        // "D:(A;;GA;;;CU)" -> Allow Generic All to Current User
+        if (!ConvertStringSecurityDescriptorToSecurityDescriptorA(
+                "D:(A;;GA;;;CU)",
+                SDDL_REVISION_1,
+                &m_sa.lpSecurityDescriptor,
+                nullptr)) {
+            m_sa.lpSecurityDescriptor = nullptr;
+        }
+    }
+    ~ScopedSecurityAttributes() {
+        if (m_sa.lpSecurityDescriptor) {
+            LocalFree(m_sa.lpSecurityDescriptor);
+        }
+    }
+    LPSECURITY_ATTRIBUTES get() {
+        return m_sa.lpSecurityDescriptor ? &m_sa : nullptr;
+    }
+private:
+    SECURITY_ATTRIBUTES m_sa;
+};
+
+} // namespace
+
+
 Timer::Timer()
 {
     QueryPerformanceCounter((LARGE_INTEGER*)&m_clock);
@@ -92,10 +125,15 @@ void Timer::sleep(float seconds)
     CloseHandle(e);
 }
 
-
 NamedMutex::NamedMutex(const char* name) :
     m_handle(CreateMutexA(RestrictedSecurityAttributes(), false, name), closeHandle)
+
+NamedMutex::NamedMutex(const char* name)
+
 {
+    ScopedSecurityAttributes sa;
+    m_handle.reset(CreateMutexA(sa.get(), false, name), closeHandle);
+
     assert( m_handle.get() != nullptr && "Creating a named mutex failed" );
 }
 
@@ -143,8 +181,13 @@ SharedMemory::open(const char* name)
 
 SharedMemory::SharedMemory(const char* name, unsigned long size)
 {
+    ScopedSecurityAttributes sa;
     m_handle.reset(
+<<<<<<< HEAD
         CreateFileMappingA(INVALID_HANDLE_VALUE, RestrictedSecurityAttributes(), PAGE_READWRITE, 0, size, name),
+=======
+        CreateFileMappingA(INVALID_HANDLE_VALUE, sa.get(), PAGE_READWRITE, 0, size, name),
+>>>>>>> origin/security-fix-mutex-creation-4822838560522721475
         closeHandle);
     if (m_handle && GetLastError() != ERROR_ALREADY_EXISTS)
     {
