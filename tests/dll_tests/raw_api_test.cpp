@@ -93,4 +93,25 @@ TEST(scDeleteCamera, IgnoresInvalidPointer) {
     scDeleteCamera(&x);
 }
 
+
+
+TEST(scSendFrame, Basic) {
+    void* cam = scCreateCamera(320, 240, 60);
+    EXPECT_NE(cam, nullptr);
+    if (cam) {
+        std::vector<uint8_t> dummy_image(320 * 240 * 3, 0);
+        EXPECT_NO_THROW({ scSendFrame(cam, dummy_image.data()); });
+        scDeleteCamera(cam);
+    }
+}
+
+TEST(scSendFrame, InvalidCamera) {
+    std::vector<uint8_t> dummy_image(320 * 240 * 3, 0);
+    EXPECT_NO_THROW({ scSendFrame(nullptr, dummy_image.data()); });
+
+    int dummy_cam_var = 0;
+    EXPECT_NO_THROW({ scSendFrame(&dummy_cam_var, dummy_image.data()); });
+}
+
+//namespace RawAPITest
 } //namespace RawAPITest
