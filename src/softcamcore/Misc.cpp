@@ -154,12 +154,6 @@ void NamedMutex::closeHandle(void* ptr)
 {
     if (ptr)
     {
-        #ifndef NDEBUG
-        // checks for the error of closing still owned mutex
-        bool ret1 = ReleaseMutex(ptr);
-        assert( ret1 == false && "Tried to delete a mutex that is locked" );
-        #endif
-
         bool ret2 = CloseHandle(ptr);
 
         assert( ret2 == true && "CloseHandle() for a mutex failed" );
