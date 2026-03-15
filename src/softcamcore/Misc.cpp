@@ -125,11 +125,7 @@ void Timer::sleep(float seconds)
     CloseHandle(e);
 }
 
-NamedMutex::NamedMutex(const char* name) :
-    m_handle(CreateMutexA(RestrictedSecurityAttributes(), false, name), closeHandle)
-
 NamedMutex::NamedMutex(const char* name)
-
 {
     ScopedSecurityAttributes sa;
     m_handle.reset(CreateMutexA(sa.get(), false, name), closeHandle);
@@ -177,11 +173,7 @@ SharedMemory::SharedMemory(const char* name, unsigned long size)
 {
     ScopedSecurityAttributes sa;
     m_handle.reset(
-<<<<<<< HEAD
-        CreateFileMappingA(INVALID_HANDLE_VALUE, RestrictedSecurityAttributes(), PAGE_READWRITE, 0, size, name),
-=======
         CreateFileMappingA(INVALID_HANDLE_VALUE, sa.get(), PAGE_READWRITE, 0, size, name),
->>>>>>> origin/security-fix-mutex-creation-4822838560522721475
         closeHandle);
     if (m_handle && GetLastError() != ERROR_ALREADY_EXISTS)
     {

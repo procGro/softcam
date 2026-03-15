@@ -1,4 +1,28 @@
+# Build directories
+build/
+bin/
+obj/
+src/engine/build/
+
+# IDE and Build System files
 .vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
+*.dir/
+
+# Compiled Binaries
+*.exe
+*.out
+*.app
+virtual_camera_engine
+test_video.mp4
+run_engine.bat
+
+
 *.vcxproj.user
 x64/
 Win32/

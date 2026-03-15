@@ -42,3 +42,5 @@ else()
         linux_stub.cpp
     )
 endif()
+
+target_link_directories(virtual_camera_engine PRIVATE "C:/ffmpeg/lib")
