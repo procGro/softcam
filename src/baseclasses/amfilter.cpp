@@ -3207,9 +3207,9 @@ HRESULT CMediaSample::SetProperties(
             output media type.
         */
         if (m_pMediaType) {
-            m_dwFlags |= Sample_TypeChanged;
+            m_dwFlags |= AM_SAMPLE_TYPECHANGED;
         } else {
-            m_dwFlags &= ~Sample_TypeChanged;
+            m_dwFlags &= ~AM_SAMPLE_TYPECHANGED;
         }
     }
 
