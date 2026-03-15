@@ -12,6 +12,37 @@ struct Camera
 {
     softcam::FrameBuffer    m_frame_buffer;
     softcam::Timer          m_timer;
+
+    void waitPeriod()
+    {
+        auto framerate = m_frame_buffer.framerate();
+        auto frame_counter = m_frame_buffer.frameCounter();
+
+        if (0.0f < framerate)
+        {
+            if (0 == frame_counter) // the first frame
+            {
+                m_timer.reset();
+            }
+            else
+            {
+                auto ref_delta = 1.0f / framerate;
+                auto time = m_timer.get();
+                if (time < ref_delta)
+                {
+                    softcam::Timer::sleep(ref_delta - time);
+                }
+                if (time < ref_delta * 1.5f)
+                {
+                    m_timer.rewind(ref_delta);
+                }
+                else
+                {
+                    m_timer.reset();
+                }
+            }
+        }
+    }
 };
 
 std::atomic<Camera*>    s_camera;
@@ -52,9 +83,6 @@ void            SendFrame(CameraHandle camera, const void* image_bits)
     Camera* target = static_cast<Camera*>(camera);
     if (target && s_camera.load() == target && image_bits)
     {
-        auto framerate = target->m_frame_buffer.framerate();
-        auto frame_counter = target->m_frame_buffer.frameCounter();
-
         // To deliver frames in the regular period, we sleep here a bit
         // before we deliver the new frame if it's not the time yet.
         // If it's already the time, we deliver it immediately and
@@ -63,30 +91,7 @@ void            SendFrame(CameraHandle camera, const void* image_bits)
         // However if the delay grew too much (greater than 50 percent
         // of the period), we reset the timer to avoid continuing
         // irregular delivery.
-        if (0.0f < framerate)
-        {
-            if (0 == frame_counter) // the first frame
-            {
-                target->m_timer.reset();
-            }
-            else
-            {
-                auto ref_delta = 1.0f / framerate;
-                auto time = target->m_timer.get();
-                if (time < ref_delta)
-                {
-                    Timer::sleep(ref_delta - time);
-                }
-                if (time < ref_delta * 1.5f)
-                {
-                    target->m_timer.rewind(ref_delta);
-                }
-                else
-                {
-                    target->m_timer.reset();
-                }
-            }
-        }
+        target->waitPeriod();
 
         target->m_frame_buffer.write(image_bits);
     }
