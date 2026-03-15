@@ -4,3 +4,24 @@ x64/
 Win32/
 /packages/
 /dist/
+
+# Compiled Binaries & Libraries
+*.exe
+*.dll
+*.lib
+*.pdb
+/build/
+/bin/
+
+# FFmpeg/OpenCV Local Dependencies
+/deps/ffmpeg/
+/deps/opencv/
+
+# User-Specific / IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Temporary Media
+/test_media/temp_*
