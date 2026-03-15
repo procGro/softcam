@@ -244,7 +244,7 @@ public:
 // the number of frames that the sliding averages are averaged over.
 // the rule is (1024*NewObservation + (AVGPERIOD-1) * PreviousAverage)/AVGPERIOD
 #define AVGPERIOD 4
-#define DO_MOVING_AVG(avg,obs) (avg = (1024*obs + (AVGPERIOD-1)*avg)/AVGPERIOD)
+#define DO_MOVING_AVG(avg,obs) (avg = (1024*(obs) + (AVGPERIOD-1)*(avg))/AVGPERIOD)
 // Spot the bug in this macro - I can't. but it doesn't work!
 
 class CBaseVideoRenderer : public CBaseRenderer,    // Base renderer class

@@ -1,11 +1,68 @@
 #include "Misc.h"
 
 #include <windows.h>
+#include <sddl.h>
 #include <cmath>
 #include <cassert>
 
 
 namespace softcam {
+
+namespace {
+
+struct RestrictedSecurityAttributes {
+    RestrictedSecurityAttributes() {
+        sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa.bInheritHandle = FALSE;
+        // Restrict access to the current user (CU) to prevent object hijacking
+        ConvertStringSecurityDescriptorToSecurityDescriptorA(
+            "D:(A;;GA;;;CU)",
+            SDDL_REVISION_1,
+            &sa.lpSecurityDescriptor,
+            NULL);
+    }
+    ~RestrictedSecurityAttributes() {
+        if (sa.lpSecurityDescriptor) {
+            LocalFree(sa.lpSecurityDescriptor);
+        }
+    }
+    SECURITY_ATTRIBUTES sa{};
+    operator SECURITY_ATTRIBUTES*() { return sa.lpSecurityDescriptor ? &sa : nullptr; }
+};
+
+} // namespace
+
+namespace {
+
+class ScopedSecurityAttributes {
+public:
+    ScopedSecurityAttributes() {
+        m_sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        m_sa.lpSecurityDescriptor = nullptr;
+        m_sa.bInheritHandle = FALSE;
+
+        // "D:(A;;GA;;;CU)" -> Allow Generic All to Current User
+        if (!ConvertStringSecurityDescriptorToSecurityDescriptorA(
+                "D:(A;;GA;;;CU)",
+                SDDL_REVISION_1,
+                &m_sa.lpSecurityDescriptor,
+                nullptr)) {
+            m_sa.lpSecurityDescriptor = nullptr;
+        }
+    }
+    ~ScopedSecurityAttributes() {
+        if (m_sa.lpSecurityDescriptor) {
+            LocalFree(m_sa.lpSecurityDescriptor);
+        }
+    }
+    LPSECURITY_ATTRIBUTES get() {
+        return m_sa.lpSecurityDescriptor ? &m_sa : nullptr;
+    }
+private:
+    SECURITY_ATTRIBUTES m_sa;
+};
+
+} // namespace
 
 
 Timer::Timer()
@@ -68,10 +125,15 @@ void Timer::sleep(float seconds)
     CloseHandle(e);
 }
 
-
 NamedMutex::NamedMutex(const char* name) :
-    m_handle(CreateMutexA(nullptr, false, name), closeHandle)
+    m_handle(CreateMutexA(RestrictedSecurityAttributes(), false, name), closeHandle)
+
+NamedMutex::NamedMutex(const char* name)
+
 {
+    ScopedSecurityAttributes sa;
+    m_handle.reset(CreateMutexA(sa.get(), false, name), closeHandle);
+
     assert( m_handle.get() != nullptr && "Creating a named mutex failed" );
 }
 
@@ -92,12 +154,6 @@ void NamedMutex::closeHandle(void* ptr)
 {
     if (ptr)
     {
-        #ifndef NDEBUG
-        // checks for the error of closing still owned mutex
-        bool ret1 = ReleaseMutex(ptr);
-        assert( ret1 == false && "Tried to delete a mutex that is locked" );
-        #endif
-
         bool ret2 = CloseHandle(ptr);
 
         assert( ret2 == true && "CloseHandle() for a mutex failed" );
@@ -119,8 +175,13 @@ SharedMemory::open(const char* name)
 
 SharedMemory::SharedMemory(const char* name, unsigned long size)
 {
+    ScopedSecurityAttributes sa;
     m_handle.reset(
-        CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, size, name),
+<<<<<<< HEAD
+        CreateFileMappingA(INVALID_HANDLE_VALUE, RestrictedSecurityAttributes(), PAGE_READWRITE, 0, size, name),
+=======
+        CreateFileMappingA(INVALID_HANDLE_VALUE, sa.get(), PAGE_READWRITE, 0, size, name),
+>>>>>>> origin/security-fix-mutex-creation-4822838560522721475
         closeHandle);
     if (m_handle && GetLastError() != ERROR_ALREADY_EXISTS)
     {

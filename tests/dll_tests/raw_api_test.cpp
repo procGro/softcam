@@ -93,4 +93,81 @@ TEST(scDeleteCamera, IgnoresInvalidPointer) {
     scDeleteCamera(&x);
 }
 
+<<<<<<< HEAD
+
+TEST(scSendFrame, Basic) {
+    void* cam = scCreateCamera(320, 240, 60);
+    EXPECT_NE(cam, nullptr);
+    if (cam) {
+        std::vector<uint8_t> dummy_image(320 * 240 * 3, 0);
+        EXPECT_NO_THROW({ scSendFrame(cam, dummy_image.data()); });
+        scDeleteCamera(cam);
+    }
+}
+
+TEST(scSendFrame, InvalidCamera) {
+    std::vector<uint8_t> dummy_image(320 * 240 * 3, 0);
+    EXPECT_NO_THROW({ scSendFrame(nullptr, dummy_image.data()); });
+
+    int dummy_cam_var = 0;
+    EXPECT_NO_THROW({ scSendFrame(&dummy_cam_var, dummy_image.data()); });
+}
+
+//namespace RawAPITest
+=======
+TEST(scIsConnected, ReturnsFalseIfNotConnected) {
+    void* cam = scCreateCamera(320, 240, 60);
+    EXPECT_NE(cam, nullptr);
+    EXPECT_FALSE(scIsConnected(cam));
+=======
+TEST(scWaitForConnection, ShouldTimeout) {
+    void* cam = scCreateCamera(320, 240, 60);
+    EXPECT_NE(cam, nullptr);
+
+    bool ret = scWaitForConnection(cam, 0.1f);
+    EXPECT_FALSE(ret);
+
+    scDeleteCamera(cam);
+}
+
+TEST(scWaitForConnection, InvalidArgs) {
+    bool ret;
+
+    ret = scWaitForConnection(nullptr, 0.0f);
+    EXPECT_FALSE(ret);
+
+    int dummy = 0;
+    ret = scWaitForConnection(&dummy, 0.0f);
+    EXPECT_FALSE(ret);
+}
+
+TEST(scIsConnected, Basic) {
+    void* cam = scCreateCamera(320, 240, 60);
+    EXPECT_NE(cam, nullptr);
+
+    bool ret = scIsConnected(cam);
+    EXPECT_FALSE(ret);
+
+>>>>>>> origin/test-scWaitForConnection-8695741499540133379
+    scDeleteCamera(cam);
+}
+
+TEST(scIsConnected, InvalidArgs) {
+<<<<<<< HEAD
+    EXPECT_FALSE(scIsConnected(nullptr));
+}
+
+
+=======
+    bool ret;
+
+    ret = scIsConnected(nullptr);
+    EXPECT_FALSE(ret);
+
+    int dummy = 0;
+    ret = scIsConnected(&dummy);
+    EXPECT_FALSE(ret);
+}
+
+>>>>>>> origin/test-scWaitForConnection-8695741499540133379
 } //namespace RawAPITest

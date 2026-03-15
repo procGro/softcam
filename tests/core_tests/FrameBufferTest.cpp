@@ -80,6 +80,10 @@ TEST(FrameBuffer, InvalidArgs) {
         auto fb = sc::FrameBuffer::create(320, 240, -60);
         EXPECT_FALSE( fb );
         EXPECT_EQ( fb.handle(), nullptr );
+    }{
+        auto fb = sc::FrameBuffer::create(-320, -240, -60);
+        EXPECT_FALSE( fb );
+        EXPECT_EQ( fb.handle(), nullptr );
     }
 }
 
